@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <meta name="theme-color" content="#0b0f14">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <h1>Expense Tracker</h1>
+        <div class="header-actions">
+            <button id="installBtn" class="btn btn-outline" hidden>Install</button>
+            <button id="notifyBtn" class="btn btn-ghost" title="Notifications">🔔</button>
+            <span id="clock" class="clock" aria-live="polite"></span>
+            <button id="themeToggle" class="btn btn-ghost" aria-label="Toggle theme">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel form-panel" aria-labelledby="expenseFormTitle">
+            <div class="panel-header">
+                <h2 id="expenseFormTitle">Add Expense</h2>
+                <div class="panel-actions">
+                    <button id="resetFormBtn" class="btn btn-ghost">Reset</button>
+                </div>
+            </div>
+            <form id="expenseForm" class="grid-form" autocomplete="off">
+                <input type="hidden" id="expenseId" />
+
+                <div class="form-field">
+                    <label for="title">Title</label>
+                    <input id="title" name="title" type="text" placeholder="e.g. Coffee" required>
+                    <small class="error" data-error-for="title"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="amount">Amount</label>
+                    <input id="amount" name="amount" type="number" step="0.01" min="0" placeholder="e.g. 4.50" required>
+                    <small class="error" data-error-for="amount"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select</option>
+                        <option>Food</option>
+                        <option>Transport</option>
+                        <option>Groceries</option>
+                        <option>Entertainment</option>
+                        <option>Health</option>
+                        <option>Bills</option>
+                        <option>Shopping</option>
+                        <option>Other</option>
+                    </select>
+                    <small class="error" data-error-for="category"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="date">Date</label>
+                    <input id="date" name="date" type="date" required>
+                    <small class="error" data-error-for="date"></small>
+                </div>
+
+                <div class="form-field">
+                    <label for="payment">Payment</label>
+                    <select id="payment" name="payment" required>
+                        <option value="">Select</option>
+                        <option>Cash</option>
+                        <option>Card</option>
+                        <option>UPI</option>
+                        <option>Online</option>
+                    </select>
+                    <small class="error" data-error-for="payment"></small>
+                </div>
+
+                <div class="form-field full">
+                    <label for="notes">Notes</label>
+                    <input id="notes" name="notes" type="text" placeholder="Optional notes">
+                </div>
+
+                <div class="form-actions full">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Add Expense</button>
+                    <button type="button" class="btn btn-outline" id="cancelEditBtn" hidden>Cancel Edit</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel filters-panel" aria-labelledby="filtersTitle">
+            <div class="panel-header">
+                <h2 id="filtersTitle">Filters</h2>
+                <div class="panel-actions">
+                    <button id="clearFiltersBtn" class="btn btn-ghost">Clear</button>
+                </div>
+            </div>
+            <div class="filters-grid">
+                <div class="form-field">
+                    <label for="search">Search</label>
+                    <input id="search" type="text" placeholder="Title or notes">
+                </div>
+                <div class="form-field">
+                    <label for="filterCategory">Category</label>
+                    <select id="filterCategory">
+                        <option value="">All</option>
+                        <option>Food</option>
+                        <option>Transport</option>
+                        <option>Groceries</option>
+                        <option>Entertainment</option>
+                        <option>Health</option>
+                        <option>Bills</option>
+                        <option>Shopping</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="fromDate">From</label>
+                    <input id="fromDate" type="date">
+                </div>
+                <div class="form-field">
+                    <label for="toDate">To</label>
+                    <input id="toDate" type="date">
+                </div>
+                <div class="form-field">
+                    <label for="sortBy">Sort by</label>
+                    <select id="sortBy">
+                        <option value="date-desc">Date ↓</option>
+                        <option value="date-asc">Date ↑</option>
+                        <option value="amount-desc">Amount ↓</option>
+                        <option value="amount-asc">Amount ↑</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button id="applyFiltersBtn" class="btn btn-outline">Apply</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel summary-panel" aria-labelledby="summaryTitle">
+            <div class="panel-header">
+                <h2 id="summaryTitle">Summary</h2>
+                <div class="panel-actions">
+                    <button id="exportExcelBtn" class="btn btn-outline">Export Excel</button>
+                    <button id="exportPdfBtn" class="btn btn-outline">Export PDF</button>
+                    <label for="importInput" class="btn btn-ghost">Import</label>
+                    <input id="importInput" type="file" accept="application/json" hidden>
+                    <button id="clearAllBtn" class="btn btn-danger">Clear All</button>
+                </div>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Total</div>
+                    <div class="summary-value" id="totalAmount">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">This Month</div>
+                    <div class="summary-value" id="monthAmount">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Records</div>
+                    <div class="summary-value" id="recordCount">0</div>
+                </div>
+            </div>
+            <div class="year-summary">
+                <div class="year-summary-title">By Year</div>
+                <div id="yearSummary" class="year-summary-grid"></div>
+            </div>
+            <div class="month-summary">
+                <div class="year-summary-title">By Month (per Year)</div>
+                <div id="monthSummary" class="month-summary-grid"></div>
+            </div>
+        </section>
+
+        <section class="panel list-panel" aria-labelledby="listTitle">
+            <div class="panel-header">
+                <h2 id="listTitle">Expenses</h2>
+            </div>
+            <div class="table-wrapper">
+                <table class="table" id="expenseTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th class="num">Amount</th>
+                            <th>Date</th>
+                            <th>Payment</th>
+                            <th>Notes</th>
+                            <th class="actions-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseTbody">
+                        <!-- Rows go here -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" class="num"><span class="muted-label">Total (shown): </span><span id="viewTotal">0</span></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div id="emptyState" class="empty-state">No expenses yet. Add your first expense above.</div>
+            </div>
+        </section>
+    </main>
+
+    <div id="exportModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="exportModalTitle">Export Range</h3>
+                <button id="closeExportModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label>Choose duration</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="exportRange" value="all" checked> All</label>
+                        <label><input type="radio" name="exportRange" value="year"> Year-wise</label>
+                        <label><input type="radio" name="exportRange" value="month"> Month-wise</label>
+                        <label><input type="radio" name="exportRange" value="custom"> From-To</label>
+                    </div>
+                </div>
+                <div class="range-grid">
+                    <div class="form-field" id="yearField">
+                        <label for="exportYear">Year</label>
+                        <input id="exportYear" type="number" min="1970" placeholder="e.g. 2025">
+                    </div>
+                    <div class="form-field" id="monthField">
+                        <label for="exportMonth">Month</label>
+                        <select id="exportMonth">
+                            <option value="">Select</option>
+                            <option value="0">Jan</option>
+                            <option value="1">Feb</option>
+                            <option value="2">Mar</option>
+                            <option value="3">Apr</option>
+                            <option value="4">May</option>
+                            <option value="5">Jun</option>
+                            <option value="6">Jul</option>
+                            <option value="7">Aug</option>
+                            <option value="8">Sep</option>
+                            <option value="9">Oct</option>
+                            <option value="10">Nov</option>
+                            <option value="11">Dec</option>
+                        </select>
+                    </div>
+                    <div class="form-field" id="fromField">
+                        <label for="exportFrom">From</label>
+                        <input id="exportFrom" type="date">
+                    </div>
+                    <div class="form-field" id="toField">
+                        <label for="exportTo">To</label>
+                        <input id="exportTo" type="date">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="exportConfirmBtn" class="btn btn-primary">Download</button>
+                <button id="exportCancelBtn" class="btn btn-outline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <span>Made with ❤️ — Local only, your data stays in your browser.</span>
+    </footer>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <div id="notifModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="notifModalTitle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="notifModalTitle">Notification Settings</h3>
+                <button id="closeNotifModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label>Choose which notifications to receive</label>
+                    <div class="radio-group">
+                        <label><input type="checkbox" id="notifDaily"> Daily notification</label>
+                        <label><input type="checkbox" id="notifMonthly"> Monthly notification</label>
+                        <label><input type="checkbox" id="notifYearly"> Yearly notification</label>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <small class="error" id="notifError"></small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="notifSaveBtn" class="btn btn-primary">Save</button>
+                <button id="notifCancelBtn" class="btn btn-outline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Default date to today for convenience
+        (function() {
+            var dateEl = document.getElementById('date');
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var dd = String(today.getDate()).padStart(2, '0');
+            dateEl.value = yyyy + '-' + mm + '-' + dd;
+        })();
+    </script>
+</body>
+</html>
+
+
