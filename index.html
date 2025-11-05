@@ -10,19 +10,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <header class="app-header">
         <div class="header-left">
-            <img src="logo.png" alt="Expense Tracker" class="logo">
+            <!-- <img src="logo.png" alt="Expense Tracker" class="logo"> -->
             <h1>Expense Tracker</h1>
         </div>
         <div class="header-actions">
+            <button id="dashboardBtn" class="btn btn-primary">📊 Dashboard</button>
             <button id="budgetBtn" class="btn btn-primary">Budget</button>
+            <button id="quotationBtn" class="btn btn-primary">Quotation</button>
+            <button id="incomeBtn" class="btn btn-primary">💰 Income</button>
             <button id="installBtn" class="btn btn-outline" hidden>Install</button>
-            <button id="notifyBtn" class="btn btn-ghost" title="Notifications">🔔</button>
             <span id="clock" class="clock" aria-live="polite"></span>
-            <button id="themeToggle" class="btn btn-ghost" aria-label="Toggle theme">🌙</button>
+            <button id="profileBtn" class="btn-profile" title="Profile" aria-label="Profile">👤</button>
         </div>
     </header>
 
@@ -167,6 +170,14 @@
                 <div class="summary-card">
                     <div class="summary-label">Records</div>
                     <div class="summary-value" id="recordCount">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Monthly Budget</div>
+                    <div class="summary-value" id="monthlyBudgetDisplay">-</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Remaining</div>
+                    <div class="summary-value" id="monthlyBudgetRemaining">-</div>
                 </div>
             </div>
             <div class="year-summary">
@@ -335,6 +346,663 @@
             <div class="modal-footer">
                 <button id="budgetSaveBtn" class="btn btn-primary">Save Budgets</button>
                 <button id="budgetCancelBtn" class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="profileModalTitle">Profile & App Statistics</h3>
+                
+                <button id="closeProfileModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-section">
+                    <div class="profile-header-section">
+                        <!-- <div class="profile-name-section">
+                            <input type="text" id="profileFullName" class="profile-name-input" placeholder="Full Name (e.g., Maran E)">
+                        </div> -->
+                        <div class="profile-details-right">
+                            <div class="profile-photo-container">
+                                <img id="profilePhotoImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ddd'/%3E%3Ctext x='50' y='60' font-size='40' text-anchor='middle' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" alt="Profile" class="profile-photo">
+                                <label for="profilePhotoInput" class="btn btn-ghost btn-small">Change Photo</label>
+                                <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+                            </div>
+                            <div class="profile-info-display">
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Name:</span>
+                                    <span class="profile-info-value" id="profileDisplayName">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Email:</span>
+                                    <span class="profile-info-value" id="profileDisplayEmail">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Phone:</span>
+                                    <span class="profile-info-value" id="profileDisplayPhone">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Gender:</span>
+                                    <span class="profile-info-value" id="profileDisplayGender">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Age:</span>
+                                    <span class="profile-info-value" id="profileDisplayAge">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Date Joined:</span>
+                                    <span class="profile-info-value" id="profileDisplayDateJoined">-</span>
+                                </div>
+                                <div class="profile-info-row">
+                                    <span class="profile-info-label">Last Login:</span>
+                                    <span class="profile-info-value" id="profileDisplayLastLogin">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section" id="userInfoSection">
+                    <div class="user-info-header">
+                        <h4>👤 User Information</h4>
+                        <div class="user-info-actions">
+                            <button id="editUserInfoBtn" class="btn btn-outline btn-small">✏️ Edit</button>
+                            <button id="addUserInfoBtn" class="btn btn-outline btn-small">➕ Add</button>
+                            <button id="saveUserInfoBtn" class="btn btn-primary btn-small" hidden>💾 Save</button>
+                            <button id="cancelUserInfoBtn" class="btn btn-ghost btn-small" hidden>Cancel</button>
+                        </div>
+                    </div>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Full Name</label>
+                            <input type="text" id="userFullName" class="user-info-input" placeholder="Enter your full name" readonly>
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Email ID</label>
+                            <input type="email" id="userEmail" class="user-info-input" placeholder="example@email.com" readonly>
+                            <small class="error" id="emailError"></small>
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Phone Number</label>
+                            <input type="tel" id="userPhone" class="user-info-input" placeholder="+1234567890" readonly>
+                            <small class="error" id="phoneError"></small>
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Date of Birth</label>
+                            <input type="date" id="userDOB" class="user-info-input" readonly>
+                            <small class="user-info-hint" id="userAge">Age: -</small>
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Gender</label>
+                            <select id="userGender" class="user-info-input" disabled>
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h4>⚙️ Settings</h4>
+                    <div class="profile-settings-grid">
+                        <div class="setting-item">
+                            <div class="setting-label">Theme</div>
+                            <button id="profileThemeToggle" class="btn btn-outline" aria-label="Toggle theme">🌙</button>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Notifications</div>
+                            <button id="profileNotifyBtn" class="btn btn-outline" title="Notification Settings">🔔</button>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Currency Type</div>
+                            <select id="currencyType" class="user-info-input" style="width: auto;">
+                                <option value="USD">USD ($)</option>
+                                <option value="INR">INR (₹)</option>
+                                <option value="EUR">EUR (€)</option>
+                                <option value="GBP">GBP (£)</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Monthly Budget Limit</div>
+                            <input type="number" id="monthlyBudgetLimit" class="user-info-input" style="width: auto;" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Savings Goal</div>
+                            <input type="number" id="savingsGoal" class="user-info-input" style="width: auto;" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                        <button id="openInvestmentModalBtn" class="btn btn-outline btn-small">📈 Investments</button>
+                        <button id="openCategoryModalBtn" class="btn btn-outline btn-small">🏷️ Categories</button>
+                        <button id="openGroupExpenseModalBtn" class="btn btn-outline btn-small">👥 Groups</button>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h4>📊 App Statistics</h4>
+                    <div class="profile-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Expenses</div>
+                            <div class="stat-value" id="profileTotalExpenses">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Amount</div>
+                            <div class="stat-value" id="profileTotalAmount">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">This Month</div>
+                            <div class="stat-value" id="profileThisMonth">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Categories Used</div>
+                            <div class="stat-value" id="profileCategories">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Average per Expense</div>
+                            <div class="stat-value" id="profileAverage">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">First Expense</div>
+                            <div class="stat-value" id="profileFirstDate">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-section">
+                    <h4>💾 Data Storage</h4>
+                    <div class="profile-info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Storage Used:</span>
+                            <span class="info-value" id="profileStorageUsed">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Updated:</span>
+                            <span class="info-value" id="profileLastUpdated">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Theme:</span>
+                            <span class="info-value" id="profileTheme">Dark</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Notifications:</span>
+                            <span class="info-value" id="profileNotifications">-</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="profile-section">
+                    <h4>📁 Category Breakdown</h4>
+                    <div id="profileCategoryBreakdown" class="category-breakdown">
+                        <!-- Categories will be dynamically added -->
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h4>📈 Top Categories</h4>
+                    <div id="profileTopCategories" class="top-categories">
+                        <!-- Top categories will be dynamically added -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="profileCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quotationModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="quotationModalTitle">
+        <div class="modal-content modal-extra-large">
+            <div class="modal-header">
+                <h3 id="quotationModalTitle">Quotation Management</h3>
+                <button id="closeQuotationModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body quotation-body">
+                <div class="quotation-tabs">
+                    <button class="quotation-tab active" data-tab="list">📋 List</button>
+                    <button class="quotation-tab" data-tab="create">➕ Create</button>
+                    <button class="quotation-tab" data-tab="search">🔍 Search</button>
+                </div>
+
+                <!-- Quotation List View -->
+                <div id="quotationListTab" class="quotation-tab-content active">
+                    <div class="quotation-list-header">
+                        <input type="text" id="quoteSearchInput" class="user-info-input" placeholder="Search by ID, Client, Date...">
+                        <button id="createNewQuoteBtn" class="btn btn-primary">Create New</button>
+                    </div>
+                    <div id="quotationList" class="quotation-list">
+                        <!-- Quotations will be listed here -->
+                    </div>
+                </div>
+
+                <!-- Create/Edit Quotation View -->
+                <div id="quotationCreateTab" class="quotation-tab-content">
+                    <input type="hidden" id="quoteEditId">
+                    
+                    <div class="quotation-section">
+                        <h4>1️⃣ Quotation Information</h4>
+                        <div class="quotation-form-grid">
+                            <div class="user-info-item">
+                                <label class="user-info-label">Quotation ID / Number</label>
+                                <div class="user-info-input-group">
+                                    <input type="text" id="quoteId" class="user-info-input" placeholder="Q-2025-001" readonly>
+                                    <button id="regenerateQuoteIdBtn" class="btn btn-ghost btn-tiny" title="Generate New ID">🔄</button>
+                                </div>
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Date</label>
+                                <input type="date" id="quoteDate" class="user-info-input">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Client / Customer Name</label>
+                                <input type="text" id="quoteClientName" class="user-info-input" placeholder="Client Name">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Email</label>
+                                <input type="email" id="quoteEmail" class="user-info-input" placeholder="client@email.com">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Phone</label>
+                                <input type="tel" id="quotePhone" class="user-info-input" placeholder="+1234567890">
+                            </div>
+                            <div class="user-info-item full-width">
+                                <label class="user-info-label">Address (optional)</label>
+                                <textarea id="quoteAddress" class="user-info-input" rows="3" placeholder="Client Address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quotation-section">
+                        <h4>2️⃣ Item Details</h4>
+                        <div id="quoteItemsList" class="quote-items-list">
+                            <!-- Items will be added here -->
+                        </div>
+                        <button id="addQuoteItemBtn" class="btn btn-outline">➕ Add Item</button>
+                    </div>
+
+                    <div class="quotation-section">
+                        <h4>3️⃣ Pricing Summary</h4>
+                        <div class="quote-pricing-grid">
+                            <div class="user-info-item">
+                                <label class="user-info-label">Subtotal</label>
+                                <input type="text" id="quoteSubtotal" class="user-info-input" readonly value="0.00">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Tax / GST (%)</label>
+                                <input type="number" id="quoteTax" class="user-info-input" min="0" step="0.01" value="0" placeholder="0">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Discount (%)</label>
+                                <input type="number" id="quoteDiscount" class="user-info-input" min="0" step="0.01" value="0" placeholder="0">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Final Total Amount</label>
+                                <input type="text" id="quoteTotal" class="user-info-input quote-total" readonly value="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quotation-section">
+                        <h4>4️⃣ Payment & Validity</h4>
+                        <div class="quotation-form-grid">
+                            <div class="user-info-item">
+                                <label class="user-info-label">Payment Method</label>
+                                <select id="quotePaymentMethod" class="user-info-input">
+                                    <option value="Cash">Cash</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Bank">Bank Transfer</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Quotation Validity Date</label>
+                                <input type="date" id="quoteValidityDate" class="user-info-input">
+                            </div>
+                            <div class="user-info-item">
+                                <label class="user-info-label">Status</label>
+                                <select id="quoteStatus" class="user-info-input">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="user-info-item full-width">
+                                <label class="user-info-label">Notes / Terms & Conditions</label>
+                                <textarea id="quoteNotes" class="user-info-input" rows="4" placeholder="Terms and conditions..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quotation-section">
+                        <h4>5️⃣ Quotation Actions</h4>
+                        <div class="quote-actions-grid">
+                            <button id="saveQuoteBtn" class="btn btn-primary">💾 Save Quotation</button>
+                            <button id="previewQuoteBtn" class="btn btn-outline">👁️ Preview</button>
+                            <button id="downloadQuotePdfBtn" class="btn btn-outline">📄 Download PDF</button>
+                            <button id="sendQuoteEmailBtn" class="btn btn-outline">📧 Send Email</button>
+                            <button id="deleteQuoteBtn" class="btn btn-danger" hidden>🗑️ Delete</button>
+                            <button id="clearQuoteFormBtn" class="btn btn-ghost">🔄 Clear Form</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Tab -->
+                <div id="quotationSearchTab" class="quotation-tab-content">
+                    <div class="quotation-form-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Search by Date From</label>
+                            <input type="date" id="quoteSearchFrom" class="user-info-input">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Search by Date To</label>
+                            <input type="date" id="quoteSearchTo" class="user-info-input">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Search by Client</label>
+                            <input type="text" id="quoteSearchClient" class="user-info-input" placeholder="Client name">
+                        </div>
+                        <div class="user-info-item">
+                            <button id="applyQuoteSearchBtn" class="btn btn-primary">🔍 Search</button>
+                            <button id="clearQuoteSearchBtn" class="btn btn-outline">Clear</button>
+                        </div>
+                    </div>
+                    <div id="quoteSearchResults" class="quotation-list">
+                        <!-- Search results -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="quotationCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Modal -->
+    <div id="dashboardModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dashboardModalTitle">
+        <div class="modal-content modal-extra-large">
+            <div class="modal-header">
+                <h3 id="dashboardModalTitle">📊 Dashboard & Analytics</h3>
+                <button id="closeDashboardModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body dashboard-body">
+                <div class="dashboard-widgets">
+                    <div class="dashboard-widget">
+                        <div class="widget-label">Today's Expense</div>
+                        <div class="widget-value" id="todayExpense">0</div>
+                    </div>
+                    <div class="dashboard-widget">
+                        <div class="widget-label">Balance Left</div>
+                        <div class="widget-value" id="balanceLeft">-</div>
+                    </div>
+                    <div class="dashboard-widget">
+                        <div class="widget-label">This Month</div>
+                        <div class="widget-value" id="monthExpense">0</div>
+                    </div>
+                    <div class="dashboard-widget">
+                        <div class="widget-label">Total Income</div>
+                        <div class="widget-value" id="totalIncome">0</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-charts">
+                    <div class="chart-container">
+                        <h4>Monthly Spending by Category</h4>
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Spending Trends (Last 6 Months)</h4>
+                        <canvas id="trendsLineChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Top 5 Expense Categories</h4>
+                        <canvas id="topCategoriesBarChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>Income vs Expense</h4>
+                        <canvas id="incomeVsExpenseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dashboardCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Management Modal -->
+    <div id="incomeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="incomeModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="incomeModalTitle">💰 Income Management</h3>
+                <button id="closeIncomeModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="income-section">
+                    <h4>Add Income</h4>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Source</label>
+                            <input type="text" id="incomeSource" class="user-info-input" placeholder="e.g., Salary, Freelance">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Amount</label>
+                            <input type="number" id="incomeAmount" class="user-info-input" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Date</label>
+                            <input type="date" id="incomeDate" class="user-info-input">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Type</label>
+                            <select id="incomeType" class="user-info-input">
+                                <option value="Salary">Salary</option>
+                                <option value="Freelance">Freelance</option>
+                                <option value="Investment">Investment</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="user-info-item full-width">
+                            <label class="user-info-label">Notes</label>
+                            <textarea id="incomeNotes" class="user-info-input" rows="2" placeholder="Optional notes"></textarea>
+                        </div>
+                    </div>
+                    <div class="income-actions">
+                        <button id="addIncomeBtn" class="btn btn-primary">➕ Add Income</button>
+                        <button id="updateIncomeBtn" class="btn btn-primary" hidden>💾 Update Income</button>
+                        <button id="cancelIncomeBtn" class="btn btn-outline" hidden>Cancel</button>
+                    </div>
+                </div>
+                
+                <div class="income-section">
+                    <h4>Income Timeline</h4>
+                    <div id="incomeList" class="income-list">
+                        <!-- Income items will be listed here -->
+                    </div>
+                </div>
+                
+                <div class="income-section">
+                    <h4>Link to Budget Goals</h4>
+                    <div class="income-budget-links">
+                        <p>Total Income: <strong id="totalIncomeDisplay">0</strong></p>
+                        <p>Monthly Budget: <strong id="monthlyBudgetDisplayIncome">-</strong></p>
+                        <p>Available for Budget: <strong id="availableForBudget">-</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="incomeCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment & Savings Modal -->
+    <div id="investmentModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="investmentModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="investmentModalTitle">📈 Investment & Savings</h3>
+                <button id="closeInvestmentModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="investment-section">
+                    <h4>Add Savings Goal</h4>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Goal Name</label>
+                            <input type="text" id="savingsGoalName" class="user-info-input" placeholder="e.g., Buy Laptop">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Target Amount</label>
+                            <input type="number" id="savingsTargetAmount" class="user-info-input" step="0.01" min="0" placeholder="50000">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Current Amount</label>
+                            <input type="number" id="savingsCurrentAmount" class="user-info-input" step="0.01" min="0" placeholder="0">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Target Date</label>
+                            <input type="date" id="savingsTargetDate" class="user-info-input">
+                        </div>
+                    </div>
+                    <div class="income-actions">
+                        <button id="addSavingsGoalBtn" class="btn btn-primary">➕ Add Goal</button>
+                        <button id="updateSavingsGoalBtn" class="btn btn-primary" hidden>💾 Update Goal</button>
+                        <button id="cancelSavingsGoalBtn" class="btn btn-outline" hidden>Cancel</button>
+                    </div>
+                </div>
+                
+                <div class="investment-section">
+                    <h4>Savings Goals</h4>
+                    <div id="savingsGoalsList" class="savings-goals-list">
+                        <!-- Goals will be listed here -->
+                    </div>
+                </div>
+                
+                <div class="investment-section">
+                    <h4>Investment Tracking</h4>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Investment Name</label>
+                            <input type="text" id="investmentName" class="user-info-input" placeholder="e.g., Stocks, Mutual Funds">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Initial Amount</label>
+                            <input type="number" id="investmentInitial" class="user-info-input" step="0.01" min="0" placeholder="0">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Current Value</label>
+                            <input type="number" id="investmentCurrent" class="user-info-input" step="0.01" min="0" placeholder="0">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Return %</label>
+                            <input type="text" id="investmentReturn" class="user-info-input" readonly>
+                        </div>
+                    </div>
+                    <div class="income-actions">
+                        <button id="addInvestmentBtn" class="btn btn-primary">➕ Add Investment</button>
+                        <button id="updateInvestmentBtn" class="btn btn-primary" hidden>💾 Update</button>
+                        <button id="cancelInvestmentBtn" class="btn btn-outline" hidden>Cancel</button>
+                    </div>
+                    <div id="investmentsList" class="investments-list">
+                        <!-- Investments will be listed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="investmentCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Customization Modal -->
+    <div id="categoryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="categoryModalTitle">🏷️ Category Customization</h3>
+                <button id="closeCategoryModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-section">
+                    <h4>Create Custom Category</h4>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Category Name</label>
+                            <input type="text" id="customCategoryName" class="user-info-input" placeholder="e.g., Rent, Gym">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Icon (Emoji)</label>
+                            <input type="text" id="customCategoryIcon" class="user-info-input" placeholder="🏠" maxlength="2">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Color</label>
+                            <input type="color" id="customCategoryColor" class="user-info-input" value="#3b82f6">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Budget Limit</label>
+                            <input type="number" id="customCategoryBudget" class="user-info-input" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="income-actions">
+                        <button id="addCustomCategoryBtn" class="btn btn-primary">➕ Add Category</button>
+                        <button id="updateCustomCategoryBtn" class="btn btn-primary" hidden>💾 Update</button>
+                        <button id="cancelCustomCategoryBtn" class="btn btn-outline" hidden>Cancel</button>
+                    </div>
+                </div>
+                
+                <div class="category-section">
+                    <h4>All Categories</h4>
+                    <div id="customCategoriesList" class="custom-categories-list">
+                        <!-- Categories will be listed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="categoryCloseBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Expenses Modal -->
+    <div id="groupExpenseModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="groupExpenseModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="groupExpenseModalTitle">👥 Group Expenses</h3>
+                <button id="closeGroupExpenseModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="group-section">
+                    <h4>Create Group</h4>
+                    <div class="user-info-grid">
+                        <div class="user-info-item">
+                            <label class="user-info-label">Group Name</label>
+                            <input type="text" id="groupName" class="user-info-input" placeholder="e.g., Trip to Goa, House Rent">
+                        </div>
+                        <div class="user-info-item">
+                            <label class="user-info-label">Add Member</label>
+                            <div class="user-info-input-group">
+                                <input type="text" id="groupMemberName" class="user-info-input" placeholder="Member name">
+                                <button id="addGroupMemberBtn" class="btn btn-outline btn-small">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="groupMembersList" class="group-members-list"></div>
+                    <div class="income-actions">
+                        <button id="createGroupBtn" class="btn btn-primary">➕ Create Group</button>
+                    </div>
+                </div>
+                
+                <div class="group-section">
+                    <h4>All Groups</h4>
+                    <div id="groupsList" class="groups-list">
+                        <!-- Groups will be listed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="groupExpenseCloseBtn" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
