@@ -13,8 +13,12 @@
 </head>
 <body>
     <header class="app-header">
-        <h1>Expense Tracker</h1>
+        <div class="header-left">
+            <img src="logo.png" alt="Expense Tracker" class="logo">
+            <h1>Expense Tracker</h1>
+        </div>
         <div class="header-actions">
+            <button id="budgetBtn" class="btn btn-primary">Budget</button>
             <button id="installBtn" class="btn btn-outline" hidden>Install</button>
             <button id="notifyBtn" class="btn btn-ghost" title="Notifications">🔔</button>
             <span id="clock" class="clock" aria-live="polite"></span>
@@ -290,6 +294,47 @@
             <div class="modal-footer">
                 <button id="notifSaveBtn" class="btn btn-primary">Save</button>
                 <button id="notifCancelBtn" class="btn btn-outline">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="budgetModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="budgetModalTitle">Budget Allocation</h3>
+                <button id="closeBudgetModal" class="btn btn-ghost" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="budget-summary">
+                    <div class="summary-card">
+                        <div class="summary-label">Total Budget</div>
+                        <div class="summary-value" id="totalBudgetAmount">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Total Spent (This Month)</div>
+                        <div class="summary-value" id="totalSpentAmount">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Remaining</div>
+                        <div class="summary-value" id="remainingAmount">0</div>
+                    </div>
+                </div>
+                <div class="budget-form-section">
+                    <h4>Set Budget by Category</h4>
+                    <div class="budget-category-grid" id="budgetCategoryGrid">
+                        <!-- Categories will be dynamically added here -->
+                    </div>
+                </div>
+                <div class="budget-progress-section">
+                    <h4>Budget Progress</h4>
+                    <div id="budgetProgressList" class="budget-progress-list">
+                        <!-- Progress bars will be added here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="budgetSaveBtn" class="btn btn-primary">Save Budgets</button>
+                <button id="budgetCancelBtn" class="btn btn-outline">Close</button>
             </div>
         </div>
     </div>

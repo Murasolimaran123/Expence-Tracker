@@ -4,6 +4,7 @@
     /** State */
     var STORAGE_KEY = "expense-tracker:data:v1";
     var THEME_KEY = "expense-tracker:theme";
+    var BUDGET_KEY = "expense-tracker:budgets:v1";
     var state = {
         expenses: [],
         filters: {
@@ -79,6 +80,17 @@
     var notifMonthly = document.getElementById('notifMonthly');
     var notifYearly = document.getElementById('notifYearly');
     var notifError = document.getElementById('notifError');
+    // Budget modal elements
+    var budgetBtn = document.getElementById('budgetBtn');
+    var budgetModal = document.getElementById('budgetModal');
+    var closeBudgetModal = document.getElementById('closeBudgetModal');
+    var budgetSaveBtn = document.getElementById('budgetSaveBtn');
+    var budgetCancelBtn = document.getElementById('budgetCancelBtn');
+    var budgetCategoryGrid = document.getElementById('budgetCategoryGrid');
+    var budgetProgressList = document.getElementById('budgetProgressList');
+    var totalBudgetAmount = document.getElementById('totalBudgetAmount');
+    var totalSpentAmount = document.getElementById('totalSpentAmount');
+    var remainingAmount = document.getElementById('remainingAmount');
 
     /** Utils */
     function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
@@ -587,6 +599,138 @@
         reader.readAsText(file);
     }
 
+    /** Budget Management */
+    var CATEGORIES = ['Food', 'Transport', 'Groceries', 'Entertainment', 'Health', 'Bills', 'Shopping', 'Other'];
+    
+    function loadBudgets() {
+        try {
+            var raw = localStorage.getItem(BUDGET_KEY);
+            return raw ? JSON.parse(raw) : {};
+        } catch (_) { return {}; }
+    }
+    
+    function saveBudgets(budgets) {
+        try {
+            localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
+        } catch (_) {}
+    }
+    
+    function getCategorySpending(category, year, month) {
+        var sum = 0;
+        state.expenses.forEach(function(exp) {
+            var d = parseDate(exp.date);
+            if (exp.category === category && d.getFullYear() === year && d.getMonth() === month) {
+                sum += toNumber(exp.amount);
+            }
+        });
+        return toNumber(sum);
+    }
+    
+    function getCurrentMonthSpending() {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = now.getMonth();
+        var sum = 0;
+        state.expenses.forEach(function(exp) {
+            var d = parseDate(exp.date);
+            if (d.getFullYear() === y && d.getMonth() === m) {
+                sum += toNumber(exp.amount);
+            }
+        });
+        return toNumber(sum);
+    }
+    
+    function renderBudgetUI() {
+        if (!budgetCategoryGrid || !budgetProgressList) return;
+        var budgets = loadBudgets();
+        var now = new Date();
+        var currentYear = now.getFullYear();
+        var currentMonth = now.getMonth();
+        
+        // Render category budget inputs
+        budgetCategoryGrid.innerHTML = '';
+        CATEGORIES.forEach(function(cat) {
+            var div = document.createElement('div');
+            div.className = 'budget-category-item';
+            var inputId = 'budget-' + cat.toLowerCase().replace(/\s+/g, '-');
+            var input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.step = '0.01';
+            input.id = inputId;
+            input.value = budgets[cat] || '';
+            input.placeholder = '0.00';
+            var label = document.createElement('label');
+            label.htmlFor = inputId;
+            label.textContent = cat;
+            div.appendChild(label);
+            div.appendChild(input);
+            budgetCategoryGrid.appendChild(div);
+        });
+        
+        // Render progress bars
+        budgetProgressList.innerHTML = '';
+        var totalBudget = 0;
+        CATEGORIES.forEach(function(cat) {
+            var budget = toNumber(budgets[cat] || 0);
+            if (budget > 0) {
+                totalBudget += budget;
+                var spent = getCategorySpending(cat, currentYear, currentMonth);
+                var percent = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+                var item = document.createElement('div');
+                item.className = 'budget-progress-item';
+                var header = document.createElement('div');
+                header.className = 'budget-progress-header';
+                header.innerHTML = '<span>' + escapeHtml(cat) + '</span><span>' + escapeHtml(formatCurrency(spent)) + ' / ' + escapeHtml(formatCurrency(budget)) + '</span>';
+                var barWrapper = document.createElement('div');
+                barWrapper.className = 'budget-progress-bar';
+                var fill = document.createElement('div');
+                fill.className = 'budget-progress-fill';
+                if (percent >= 100) fill.classList.add('danger');
+                else if (percent >= 80) fill.classList.add('warning');
+                fill.style.width = Math.min(100, percent) + '%';
+                barWrapper.appendChild(fill);
+                item.appendChild(header);
+                item.appendChild(barWrapper);
+                budgetProgressList.appendChild(item);
+            }
+        });
+        
+        // Update summary
+        if (totalBudgetAmount) totalBudgetAmount.textContent = formatCurrency(totalBudget);
+        var totalSpent = getCurrentMonthSpending();
+        if (totalSpentAmount) totalSpentAmount.textContent = formatCurrency(totalSpent);
+        var remaining = toNumber(totalBudget - totalSpent);
+        if (remainingAmount) {
+            remainingAmount.textContent = formatCurrency(remaining);
+            remainingAmount.style.color = remaining < 0 ? 'var(--danger)' : (remaining < totalBudget * 0.1 ? '#f59e0b' : 'var(--text)');
+        }
+    }
+    
+    function openBudgetModal() {
+        if (!budgetModal) return;
+        renderBudgetUI();
+        budgetModal.classList.remove('hidden');
+    }
+    
+    function closeBudget() {
+        if (budgetModal) budgetModal.classList.add('hidden');
+    }
+    
+    function saveBudgetSettings() {
+        var budgets = {};
+        CATEGORIES.forEach(function(cat) {
+            var inputId = 'budget-' + cat.toLowerCase().replace(/\s+/g, '-');
+            var input = document.getElementById(inputId);
+            if (input && input.value) {
+                var val = parseFloat(input.value);
+                if (val > 0) budgets[cat] = toNumber(val);
+            }
+        });
+        saveBudgets(budgets);
+        renderBudgetUI();
+    }
+
     /** Wire up events */
     expenseForm.addEventListener("submit", function(e) {
         e.preventDefault();
@@ -655,6 +799,12 @@
     if (notifCancelBtn) notifCancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeNotif(); });
     if (closeNotifModal) closeNotifModal.addEventListener('click', closeNotif);
     if (notifSaveBtn) notifSaveBtn.addEventListener('click', saveNotifPrefs);
+    
+    // Budget event handlers
+    if (budgetBtn) budgetBtn.addEventListener('click', openBudgetModal);
+    if (closeBudgetModal) closeBudgetModal.addEventListener('click', closeBudget);
+    if (budgetCancelBtn) budgetCancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeBudget(); });
+    if (budgetSaveBtn) budgetSaveBtn.addEventListener('click', function(e){ e.preventDefault(); saveBudgetSettings(); });
 
     /** Init */
     function init() {
